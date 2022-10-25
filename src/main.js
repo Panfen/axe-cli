@@ -1,3 +1,7 @@
+/**
+ * 参考：https://juejin.cn/post/7142323369894445063
+ */ 
+
 const program = require('commander')
 const path  = require('path')
 const { version } = require('./utils/constants');
