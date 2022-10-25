@@ -4,10 +4,11 @@
 
 const axios = require('axios');
 const ora = require('ora');
+const path  = require('path')
 const inquirer  = require('inquirer');
 const { promisify } = require('util');
 const downloadGit = promisify(require('download-git-repo'))
-const ncp = promisify(require('ncp'))
+const ncp = promisify(require('ncp').ncp)
 
 // 存放下载文件的目录：/Users/panjifei/.template
 const downloadDirectory = `${process.env[process.platform === 'darwin' ? 'HOME' : 'USERPROFILE']}/.template`;
@@ -33,6 +34,7 @@ const download = async (repo, tag) => {
 	}
 	const dest = `${downloadDirectory}/${repo}`;
 	await downloadGit(api, dest);
+	return dest; // 返回下载目录
 }
 
 // 封装fetch， 带loading 
@@ -71,7 +73,7 @@ module.exports = async (programName) => {
 	// 下载项目
 	const target = await wrapFetchAddLoading(download, 'download template')(repo, tag)
 
-	// 拷贝项目到当前执行命令的目录下
-	await ncp(target, path.join(path.resolve(), repo))
+	// 拷贝项目
+	await ncp(target, path.join(path.resolve(), `/template/${repo}`));
 }
 

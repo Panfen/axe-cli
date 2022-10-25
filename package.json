@@ -1,5 +1,5 @@
 {
-  "name": "p-cli",
+  "name": "axe-cli",
   "version": "1.0.0",
   "description": "a simple cli",
   "repository": "none",
@@ -8,7 +8,7 @@
     "lint": "eslint src"
   },
   "bin": {
-    "p-cli": "./bin/www"
+    "axe-cli": "./bin/www"
   },
   "keywords": [],
   "author": "",

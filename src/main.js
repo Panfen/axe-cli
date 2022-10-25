@@ -7,15 +7,15 @@ const actionsMap = {
 		description: 'create project',
 		alias: 'cp',
 		examples: [
-			'p-cli create <template-name>'
+			'axe-cli create <template-name>'
 		],
 	},
 	config: {
 		description: 'config info',
 		alias: 'ci',
 		examples: [
-			'p-cli config get <k>',
-			'p-cli config set <k> <v>'
+			'axe-cli config get <k>',
+			'axe-cli config set <k> <v>'
 		],
 	},
 	'*': {
