@@ -9,6 +9,10 @@ const inquirer  = require('inquirer');
 const { promisify } = require('util');
 const downloadGit = promisify(require('download-git-repo'))
 const ncp = promisify(require('ncp').ncp)
+const config = require('./config')
+
+const repoUrl = config('getVal', 'repo'); // 获取配置变量
+
 
 // 存放下载文件的目录：/Users/panjifei/.template
 const downloadDirectory = `${process.env[process.platform === 'darwin' ? 'HOME' : 'USERPROFILE']}/.template`;
