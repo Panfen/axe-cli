@@ -5,10 +5,16 @@
 const axios = require('axios');
 const ora = require('ora');
 const path  = require('path')
+const fs = require('fs')
 const inquirer  = require('inquirer');
 const { promisify } = require('util');
-const downloadGit = promisify(require('download-git-repo'))
-const ncp = promisify(require('ncp').ncp)
+const metalsmith = require('metalsmith'); // 遍历文件夹
+let { render } = require('consolidate').ejs;
+const downloadGit = promisify(require('download-git-repo'));
+const ncp = promisify(require('ncp').ncp);
+
+render = promisify(render);
+
 const config = require('./config')
 
 const repoUrl = config('getVal', 'repo'); // 获取配置变量
@@ -51,7 +57,8 @@ const wrapFetchAddLoading = (fn, message) => async (...args) => {
 }
 
 
-module.exports = async (programName) => {
+module.exports = async (projectName = 'axe-cli-project') => {
+
 	let repos = await wrapFetchAddLoading(fetchRepoList, 'fetching template list...')();
 	repos = repos.map((repo) => repo.name)
 
@@ -74,10 +81,52 @@ module.exports = async (programName) => {
 		choices: tags
 	})
 
-	// 下载项目
+	// 下载项目，返回下载路径（/Users/panjifei/.template/axe-cli-repo）
 	const target = await wrapFetchAddLoading(download, 'download template')(repo, tag)
 
-	// 拷贝项目
-	await ncp(target, path.join(path.resolve(), `/template/${repo}`));
+	// 没有ask文件说明不需要编译，直接拷贝，否则需要编译
+	if (!fs.existsSync(path.join(target, 'ask.js'))) {
+		// 拷贝项目
+		await ncp(target, path.join(path.resolve(), projectName));
+	} else {
+		await new Promise((resolve, reject) => {
+			metalsmith(__dirname)
+				.source(target) // 遍历下载的目录
+				.destination(path.join(path.resolve(), projectName)) // 输出渲染后的结果
+				.use(async (files, metal, done) => {
+					// 弹框询问用户
+					const result = await inquirer.prompt(require(path.join(target, 'ask.js')));
+					const data = metal.metadata();
+					// 将询问结果放到metadata中保证在下一个中间件中可以获取
+					Object.assign(data, result);
+					delete files['ask.js'];
+					done();
+				})
+				.use((files, metal, done) => {
+					Reflect.ownKeys(files).forEach(async (file) => {
+						// 获取文件中的内容
+						let content = files[file].contents.toString();
+						// 如果是js或json文件才有可能是模板
+						if (file.includes('.js') || file.includes('.json')) {
+							// 文件中包含‘<%’才需要编译
+							if (content.includes('<%')) {
+								// 用数据渲染模板
+								content = await render(content, metal.metadata());
+								// 渲染完成的数据替换原内容
+								files[file].contents = Buffer.from(content);
+							}
+						}
+					});
+					done();
+				})
+				.build((err) => {
+					if (!err) {
+						resolve()
+					} else {
+						reject()
+					}
+				});
+		});
+	}
 }
 

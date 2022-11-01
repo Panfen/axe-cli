@@ -14,9 +14,11 @@ module.exports = (action, k, v) => {
 	const flag = fs.existsSync(configFile);
 	const obj = {}
 
-	if (flag) { // 配置文件存在
+	// 配置文件存在
+	if (flag) {
 		const content = fs.readFileSync(configFile, 'utf8');
-		const c = decode(content); // 将文件解析成对象
+		// 将文件解析成对象
+		const c = decode(content);
 		Object.assign(obj, c);
 	}
 
